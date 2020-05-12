@@ -19,12 +19,10 @@ package cn.com.ph.data.spark
 // $example on:spark_hive$
 
 import java.io.File
-import java.util
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.{DateType, IntegerType, StringType, StructField, StructType, TimestampType}
-
-import scala.collection.mutable
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path
+import org.apache.spark.sql.{SaveMode, SparkSession}
 // $example off:spark_hive$
 
 
@@ -52,15 +50,87 @@ object SparkHiveExample {
       .builder()
       .master("local")
       .appName("Spark Hive Example")
-      .config("spark.sql.warehouse.dir", warehouseLocation)
+      .config("hive.exec.dynamic.partition", true)
+      .config("hive.exec.dynamic.partition.mode", "nonstrict")
       .enableHiveSupport()
       .getOrCreate()
+
 
     //    sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
     //    sql("LOAD DATA LOCAL INPATH 'examples/src/main/resources/kv1.txt' INTO TABLE src")
 
 
-    val hiveTableName = "test.data_type"
+//    spark.sparkContext.setCheckpointDir("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/")
+    val hiveTableName = "test.test_partition"
+//    val hiveTmpTableName = s"${hiveTableName}_delta_tmp"
+//    spark.sql(s"create table if not exists $hiveTmpTableName like $hiveTableName")
+
+    val tableDataFrame = spark.sql(s"select * from $hiveTableName")
+    tableDataFrame.show(10)
+
+    val dataTmpPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/test_partition"
+    tableDataFrame
+      .write
+      .format("ORC")
+      .partitionBy("tel")
+      .mode(SaveMode.Overwrite)
+      .save(dataTmpPathStr)
+
+    spark.sql(s"truncate table $hiveTableName")
+
+
+    val dataPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/user/hive/warehouse/test.db/"
+    val conf = new Configuration
+    val dataTmpPath = new Path(dataTmpPathStr)
+    val dataPath = new Path(dataPathStr)
+    val hdfs = dataTmpPath.getFileSystem(conf)
+
+    hdfs.rename(dataTmpPath, dataPath)
+
+    spark.sql(s"msck repair table $hiveTableName")
+
+
+
+//    val conf = new Configuration
+//    val path = new Path(dataTmpPath)
+//    val hdfs = path.getFileSystem(conf)
+//    val fileList = hdfs.listStatusIterator(new Path(dataTmpPath))
+//    var list: Seq[String] = List()
+//    while(fileList.hasNext){
+//      val fileStatus = fileList.next
+//      if(fileStatus.isDirectory){
+//        list = list :+ fileStatus.getPath.getName
+//      }
+//    }
+//    list.foreach(println(_))
+//
+//    val partitionList = spark.sparkContext.parallelize(list, 10)
+//
+//    println(s"===============>${partitionList.getNumPartitions}")
+//
+//    partitionList.foreach(partitionName => {
+//      println(s"===========>$partitionName")
+//      val split = partitionName.split("=")
+//      spark.sql(s"""load data inpath '$dataTmpPath/$partitionName' overwrite into table test.person_partation partition (${split(0)} = '${split(1)}')""")
+//    })
+
+
+
+//    spark.sql(s"""load data inpath '$dataTmpPath' overwrite into table test.person_partation""")
+
+    //    tableDataFrame.persist(StorageLevel.DISK_ONLY)
+
+//    spark.sql(s"truncate table $hiveTableName")
+
+//    tableDataFrame
+//      .checkpoint(true)
+//      .write
+//      .mode(SaveMode.Overwrite)
+//      .saveAsTable(hiveTmpTableName)
+
+//    spark.sql(s"DROP TABLE $hiveTableName")
+//    spark.sql(s"ALTER TABLE $hiveTmpTableName RENAME TO $hiveTableName")
+
     //    val structType: StructType = spark.table(hiveTableName).schema
     //    structType.foreach(structField => println(s"======>name1: ${structField.name}"))
 
@@ -79,12 +149,12 @@ object SparkHiveExample {
     //      println(s"====>key: $key, value: $value")
     //    })
 
-    val list = List("CREATE_DATE", "CREATED_BY")
-    val map: util.TreeMap[String, Any] = new util.TreeMap[String, Any]()
-    list.foreach(item => map.put(item, item))
-    map.forEach((key, value) => {
-      println(s"====>key: $key, value: $value")
-    })
+    //    val list = List("CREATE_DATE", "CREATED_BY")
+    //    val map: util.TreeMap[String, Any] = new util.TreeMap[String, Any]()
+    //    list.foreach(item => map.put(item, item))
+    //    map.forEach((key, value) => {
+    //      println(s"====>key: $key, value: $value")
+    //    })
 
 
     //    val hiveSchema = spark.table(hiveTableName).schema
@@ -116,4 +186,6 @@ object SparkHiveExample {
     spark.stop()
     // $example off:spark_hive$
   }
+
+
 }
