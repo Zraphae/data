@@ -19,12 +19,15 @@ package cn.com.ph.data.spark
 // $example on:spark_hive$
 
 import java.io.File
+import java.util
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.sql.types.{StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Dataset, RelationalGroupedDataset, SaveMode, SparkSession}
 // $example off:spark_hive$
 
+import scala.collection.JavaConverters._
 
 object SparkHiveExample {
 
@@ -60,76 +63,106 @@ object SparkHiveExample {
     //    sql("LOAD DATA LOCAL INPATH 'examples/src/main/resources/kv1.txt' INTO TABLE src")
 
 
-//    spark.sparkContext.setCheckpointDir("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/")
+    //    spark.sparkContext.setCheckpointDir("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/")
     val hiveTableName = "test.test_partition"
-//    val hiveTmpTableName = s"${hiveTableName}_delta_tmp"
-//    spark.sql(s"create table if not exists $hiveTmpTableName like $hiveTableName")
+    //    val hiveTmpTableName = s"${hiveTableName}_delta_tmp"
+    //    spark.sql(s"create table if not exists $hiveTmpTableName like $hiveTableName")
 
-    val tableDataFrame = spark.sql(s"select * from $hiveTableName")
-    tableDataFrame.show(10)
+    //    val tableDataFrame = spark.sql(s"select * from $hiveTableName")
 
-    val dataTmpPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/test_partition"
-    tableDataFrame
+    val uDataFrame: DataFrame = spark.read.format("csv")
+      .option("delimiter", ",")
+      .option("header", "true")
+      .option("quote", "'")
+      .option("nullValue", "\\N")
+      .option("inferSchema", "true")
+      .load("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/test2/test_update.csv")
+
+
+    import spark.implicits._
+    val partitionInfos: Array[String] = uDataFrame.map(row => row.getAs[String]("tel")).distinct().collect()
+    val partitionConditions = partitionInfos.map(partition => s"'$partition'").mkString(",")
+
+    val hiveTableSql = s"select * from $hiveTableName where tel in ($partitionConditions)"
+    val hiveDataFrame = spark.sql(hiveTableSql)
+
+    val unionDataFrame = hiveDataFrame.union(uDataFrame)
+
+    unionDataFrame.createOrReplaceTempView("unionDataFrame")
+    val finalTableSql = "select id,name,tel from (select id,name,tel, row_number() over(partition by id order by name) rn from unionDataFrame) where rn = 1"
+    val finalDataFrame = spark.sql(finalTableSql)
+
+    val dataTmpPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/$hiveTableName"
+    finalDataFrame
       .write
       .format("ORC")
       .partitionBy("tel")
       .mode(SaveMode.Overwrite)
       .save(dataTmpPathStr)
 
-    spark.sql(s"truncate table $hiveTableName")
 
-
-    val dataPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/user/hive/warehouse/test.db/"
+    val dataPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/user/hive/warehouse/test.db/test_partition"
     val conf = new Configuration
-    val dataTmpPath = new Path(dataTmpPathStr)
-    val dataPath = new Path(dataPathStr)
-    val hdfs = dataTmpPath.getFileSystem(conf)
+    val hdfs = FileSystem.get(conf)
 
-    hdfs.rename(dataTmpPath, dataPath)
+    partitionInfos.foreach(partitionName => {
+      val partitionStr = s"tel=$partitionName"
+      val partDataPathStr = s"$dataPathStr/$partitionStr"
+      val tmpPartDataPathStr = s"$dataTmpPathStr/$partitionStr"
+
+      val partDataPath = new Path(partDataPathStr)
+      val tmpPartDataPath = new Path(tmpPartDataPathStr)
+
+      println(partDataPathStr)
+      println(tmpPartDataPathStr)
+
+      hdfs.delete(partDataPath, true)
+      hdfs.rename(tmpPartDataPath, tmpPartDataPath)
+    })
+
 
     spark.sql(s"msck repair table $hiveTableName")
 
 
 
-//    val conf = new Configuration
-//    val path = new Path(dataTmpPath)
-//    val hdfs = path.getFileSystem(conf)
-//    val fileList = hdfs.listStatusIterator(new Path(dataTmpPath))
-//    var list: Seq[String] = List()
-//    while(fileList.hasNext){
-//      val fileStatus = fileList.next
-//      if(fileStatus.isDirectory){
-//        list = list :+ fileStatus.getPath.getName
-//      }
-//    }
-//    list.foreach(println(_))
-//
-//    val partitionList = spark.sparkContext.parallelize(list, 10)
-//
-//    println(s"===============>${partitionList.getNumPartitions}")
-//
-//    partitionList.foreach(partitionName => {
-//      println(s"===========>$partitionName")
-//      val split = partitionName.split("=")
-//      spark.sql(s"""load data inpath '$dataTmpPath/$partitionName' overwrite into table test.person_partation partition (${split(0)} = '${split(1)}')""")
-//    })
+    //    val conf = new Configuration
+    //    val path = new Path(dataTmpPathStr)
+    //    val hdfs = path.getFileSystem(conf)
+    //    val fileList = hdfs.listStatusIterator(new Path(dataTmpPathStr))
+    //    var list: Seq[String] = List()
+    //    while(fileList.hasNext){
+    //      val fileStatus = fileList.next
+    //      if(fileStatus.isDirectory){
+    //        list = list :+ fileStatus.getPath.getName
+    //      }
+    //    }
+    //    list.foreach(println(_))
+    //
+    //    val partitionList = spark.sparkContext.parallelize(list, 10)
+    //
+    //    println(s"===============>${partitionList.getNumPartitions}")
+    //
+    //    partitionList.foreach(partitionName => {
+    //      println(s"===========>$partitionName")
+    //      val split = partitionName.split("=")
+    //      spark.sql(s"""load data inpath '$dataTmpPath/$partitionName' overwrite into table test.person_partation partition (${split(0)} = '${split(1)}')""")
+    //    })
 
 
-
-//    spark.sql(s"""load data inpath '$dataTmpPath' overwrite into table test.person_partation""")
+    //    spark.sql(s"""load data inpath '$dataTmpPath' overwrite into table test.person_partation""")
 
     //    tableDataFrame.persist(StorageLevel.DISK_ONLY)
 
-//    spark.sql(s"truncate table $hiveTableName")
+    //    spark.sql(s"truncate table $hiveTableName")
 
-//    tableDataFrame
-//      .checkpoint(true)
-//      .write
-//      .mode(SaveMode.Overwrite)
-//      .saveAsTable(hiveTmpTableName)
+    //    tableDataFrame
+    //      .checkpoint(true)
+    //      .write
+    //      .mode(SaveMode.Overwrite)
+    //      .saveAsTable(hiveTmpTableName)
 
-//    spark.sql(s"DROP TABLE $hiveTableName")
-//    spark.sql(s"ALTER TABLE $hiveTmpTableName RENAME TO $hiveTableName")
+    //    spark.sql(s"DROP TABLE $hiveTableName")
+    //    spark.sql(s"ALTER TABLE $hiveTmpTableName RENAME TO $hiveTableName")
 
     //    val structType: StructType = spark.table(hiveTableName).schema
     //    structType.foreach(structField => println(s"======>name1: ${structField.name}"))
