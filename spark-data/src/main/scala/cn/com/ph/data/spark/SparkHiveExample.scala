@@ -19,12 +19,16 @@ package cn.com.ph.data.spark
 // $example on:spark_hive$
 
 import java.io.File
+import java.sql.Timestamp
 import java.util
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.types.{StructField, StructType}
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, RelationalGroupedDataset, SaveMode, SparkSession}
+
+import scala.util.Random
 // $example off:spark_hive$
 
 import scala.collection.JavaConverters._
@@ -62,67 +66,82 @@ object SparkHiveExample {
     //    sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
     //    sql("LOAD DATA LOCAL INPATH 'examples/src/main/resources/kv1.txt' INTO TABLE src")
 
-
+    val randomDateCreated = () => {
+      val curr = 1592547980187L
+      val daysTime2K = 172800000000L
+      val start = 1419747980187L
+      val random = Math.abs(Random.nextLong())
+      val radio = random % daysTime2K
+      val radomdate = start + radio
+      new Timestamp(radomdate).toString.substring(0,10)
+    }
     //    spark.sparkContext.setCheckpointDir("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/")
-    val hiveTableName = "test.test_partition"
+    val hiveTableName = "test.test_date"
+    val hiveDF = spark.table(hiveTableName)
+    hiveDF.printSchema()
+    val randomDateUDF = udf(randomDateCreated)
+    val newHiveDF: DataFrame = hiveDF
+      .withColumn("create_day", randomDateUDF())
+//      .withColumn("create_day", date_format(col("created_date"), "yyyy-MM-dd"))
+    newHiveDF.show(10)
+    newHiveDF.printSchema
     //    val hiveTmpTableName = s"${hiveTableName}_delta_tmp"
     //    spark.sql(s"create table if not exists $hiveTmpTableName like $hiveTableName")
 
     //    val tableDataFrame = spark.sql(s"select * from $hiveTableName")
 
-    val uDataFrame: DataFrame = spark.read.format("csv")
-      .option("delimiter", ",")
-      .option("header", "true")
-      .option("quote", "'")
-      .option("nullValue", "\\N")
-      .option("inferSchema", "true")
-      .load("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/test2/test_update.csv")
-
-
-    import spark.implicits._
-    val partitionInfos: Array[String] = uDataFrame.map(row => row.getAs[String]("tel")).distinct().collect()
-    val partitionConditions = partitionInfos.map(partition => s"'$partition'").mkString(",")
-
-    val hiveTableSql = s"select * from $hiveTableName where tel in ($partitionConditions)"
-    val hiveDataFrame = spark.sql(hiveTableSql)
-
-    val unionDataFrame = hiveDataFrame.union(uDataFrame)
-
-    unionDataFrame.createOrReplaceTempView("unionDataFrame")
-    val finalTableSql = "select id,name,tel from (select id,name,tel, row_number() over(partition by id order by name) rn from unionDataFrame) where rn = 1"
-    val finalDataFrame = spark.sql(finalTableSql)
-
-    val dataTmpPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/$hiveTableName"
-    finalDataFrame
-      .write
-      .format("ORC")
-      .partitionBy("tel")
-      .mode(SaveMode.Overwrite)
-      .save(dataTmpPathStr)
-
-
-    val dataPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/user/hive/warehouse/test.db/test_partition"
-    val conf = new Configuration
-    val hdfs = FileSystem.get(conf)
-
-    partitionInfos.foreach(partitionName => {
-      val partitionStr = s"tel=$partitionName"
-      val partDataPathStr = s"$dataPathStr/$partitionStr"
-      val tmpPartDataPathStr = s"$dataTmpPathStr/$partitionStr"
-
-      val partDataPath = new Path(partDataPathStr)
-      val tmpPartDataPath = new Path(tmpPartDataPathStr)
-
-      println(partDataPathStr)
-      println(tmpPartDataPathStr)
-
-      hdfs.delete(partDataPath, true)
-      hdfs.rename(tmpPartDataPath, tmpPartDataPath)
-    })
-
-
-    spark.sql(s"msck repair table $hiveTableName")
-
+    //    val uDataFrame: DataFrame = spark.read.format("csv")
+    //      .option("delimiter", ",")
+    //      .option("header", "true")
+    //      .option("quote", "'")
+    //      .option("nullValue", "\\N")
+    //      .option("inferSchema", "true")
+    //      .load("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/test2/test_update.csv")
+    //
+    //
+    //    import spark.implicits._
+    //    val partitionInfos: Array[String] = uDataFrame.map(row => row.getAs[String]("tel")).distinct().collect()
+    //    val partitionConditions = partitionInfos.map(partition => s"'$partition'").mkString(",")
+    //
+    //    val hiveTableSql = s"select * from $hiveTableName where tel in ($partitionConditions)"
+    //    val hiveDataFrame = spark.sql(hiveTableSql)
+    //
+    //    val unionDataFrame = hiveDataFrame.union(uDataFrame)
+    //
+    //    unionDataFrame.createOrReplaceTempView("unionDataFrame")
+    //    val finalTableSql = "select id,name,tel from (select id,name,tel, row_number() over(partition by id order by name) rn from unionDataFrame) where rn = 1"
+    //    val finalDataFrame = spark.sql(finalTableSql)
+    //
+    //    val dataTmpPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/$hiveTableName"
+    //    finalDataFrame
+    //      .write
+    //      .format("ORC")
+    //      .partitionBy("tel")
+    //      .mode(SaveMode.Overwrite)
+    //      .save(dataTmpPathStr)
+    //
+    //
+    //    val dataPathStr = s"hdfs://pengzhaos-MacBook-Pro.local:9000/user/hive/warehouse/test.db/test_partition"
+    //    val conf = new Configuration
+    //    val hdfs = FileSystem.get(conf)
+    //
+    //    partitionInfos.foreach(partitionName => {
+    //      val partitionStr = s"tel=$partitionName"
+    //      val partDataPathStr = s"$dataPathStr/$partitionStr"
+    //      val tmpPartDataPathStr = s"$dataTmpPathStr/$partitionStr"
+    //
+    //      val partDataPath = new Path(partDataPathStr)
+    //      val tmpPartDataPath = new Path(tmpPartDataPathStr)
+    //
+    //      println(partDataPathStr)
+    //      println(tmpPartDataPathStr)
+    //
+    //      hdfs.delete(partDataPath, true)
+    //      hdfs.rename(tmpPartDataPath, tmpPartDataPath)
+    //    })
+    //
+    //
+    //    spark.sql(s"msck repair table $hiveTableName")
 
 
     //    val conf = new Configuration
