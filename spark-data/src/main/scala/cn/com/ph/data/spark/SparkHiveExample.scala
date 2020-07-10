@@ -26,7 +26,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, Dataset, RelationalGroupedDataset, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, RelationalGroupedDataset, Row, SaveMode, SparkSession}
 
 import scala.util.Random
 // $example off:spark_hive$
@@ -51,7 +51,7 @@ object SparkHiveExample {
 
     // $example on:spark_hive$
     // warehouseLocation points to the default location for managed databases and tables
-    val warehouseLocation = new File("spark-warehouse").getAbsolutePath
+//    val warehouseLocation = new File("spark-warehouse").getAbsolutePath
 
     val spark = SparkSession
       .builder()
@@ -63,28 +63,42 @@ object SparkHiveExample {
       .getOrCreate()
 
 
+    val filePath = "/user/zhaopeng/Downloads/"
+    val hiveTableName = "test.test_partition"
+    val hiveSchema = spark.table(hiveTableName).schema
+//    val hiveDF = spark.table(hiveTableName)
+//    val hiveDF = spark.sql(s"select id,name from $hiveTableName")
+//    val hiveDF = spark.sql(s"select tel from $hiveTableName")
+//    hiveDF.write.mode(SaveMode.Append).parquet(filePath)
+
+    val parquetDF = spark.read.schema(hiveSchema).parquet(filePath)
+    parquetDF.show()
+
+    
+
+
     //    sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
     //    sql("LOAD DATA LOCAL INPATH 'examples/src/main/resources/kv1.txt' INTO TABLE src")
 
-    val randomDateCreated = () => {
-      val curr = 1592547980187L
-      val daysTime2K = 172800000000L
-      val start = 1419747980187L
-      val random = Math.abs(Random.nextLong())
-      val radio = random % daysTime2K
-      val radomdate = start + radio
-      new Timestamp(radomdate).toString.substring(0,10)
-    }
-    //    spark.sparkContext.setCheckpointDir("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/")
-    val hiveTableName = "test.test_date"
-    val hiveDF = spark.table(hiveTableName)
-    hiveDF.printSchema()
-    val randomDateUDF = udf(randomDateCreated)
-    val newHiveDF: DataFrame = hiveDF
-      .withColumn("create_day", randomDateUDF())
-//      .withColumn("create_day", date_format(col("created_date"), "yyyy-MM-dd"))
-    newHiveDF.show(10)
-    newHiveDF.printSchema
+//    val randomDateCreated = () => {
+//      val curr = 1592547980187L
+//      val daysTime2K = 172800000000L
+//      val start = 1419747980187L
+//      val random = Math.abs(Random.nextLong())
+//      val radio = random % daysTime2K
+//      val radomdate = start + radio
+//      new Timestamp(radomdate).toString.substring(0,10)
+//    }
+//    //    spark.sparkContext.setCheckpointDir("hdfs://pengzhaos-MacBook-Pro.local:9000/tmp/")
+//    val hiveTableName = "test.test_date"
+//    val hiveDF = spark.table(hiveTableName)
+//    hiveDF.printSchema()
+//    val randomDateUDF = udf(randomDateCreated)
+//    val newHiveDF: DataFrame = hiveDF
+//      .withColumn("create_day", randomDateUDF())
+////      .withColumn("create_day", date_format(col("created_date"), "yyyy-MM-dd"))
+//    newHiveDF.show(10)
+//    newHiveDF.printSchema
     //    val hiveTmpTableName = s"${hiveTableName}_delta_tmp"
     //    spark.sql(s"create table if not exists $hiveTmpTableName like $hiveTableName")
 
