@@ -62,17 +62,33 @@ object SparkHiveExample {
       .enableHiveSupport()
       .getOrCreate()
 
-
-    val filePath = "/user/zhaopeng/Downloads/"
     val hiveTableName = "test.test_partition"
-    val hiveSchema = spark.table(hiveTableName).schema
+    val hiveDFA = spark.table(hiveTableName)
+    val hiveDFAId = hiveDFA.select("id")
+//    hiveDF.show()
+    val hiveDFB = spark.sql(s"select * from $hiveTableName where id = 2")
+    val hiveDFBId = hiveDFB.select("id")
+//    hiveDF1.show()
+
+    val hiveDFAJoinBId = hiveDFAId.join(hiveDFBId, "id")
+    val hiveExceptId: Dataset[Row] = hiveDFAId.except(hiveDFAJoinBId)
+//    hiveExceptId.show()
+
+    val hiveDFAExcept = hiveDFA.join(hiveExceptId, "id")
+    val hiveDFUp = hiveDFAExcept.union(hiveDFB)
+    hiveDFUp.show()
+//    val hiveDFJoin = hiveDFAll.join(hiveExcept, "id")
+//    hiveDFJoin.show()
+
+//    val filePath = "/user/zhaopeng/Downloads/"
+//    val hiveSchema = spark.table(hiveTableName).schema
 //    val hiveDF = spark.table(hiveTableName)
 //    val hiveDF = spark.sql(s"select id,name from $hiveTableName")
 //    val hiveDF = spark.sql(s"select tel from $hiveTableName")
 //    hiveDF.write.mode(SaveMode.Append).parquet(filePath)
 
-    val parquetDF = spark.read.schema(hiveSchema).parquet(filePath)
-    parquetDF.show()
+//    val parquetDF = spark.read.schema(hiveSchema).parquet(filePath)
+//    parquetDF.show()
 
     
 
