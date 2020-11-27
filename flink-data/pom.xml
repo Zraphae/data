@@ -106,6 +106,20 @@
             <version>${flink.version}</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/ru.ivi.opensource/flink-clickhouse-sink -->
+        <dependency>
+            <groupId>ru.ivi.opensource</groupId>
+            <artifactId>flink-clickhouse-sink</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>com.aliyun</groupId>-->
+<!--            <artifactId>flink-connector-clickhouse</artifactId>-->
+<!--            <version>1.11.0</version>-->
+<!--        </dependency>-->
+
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

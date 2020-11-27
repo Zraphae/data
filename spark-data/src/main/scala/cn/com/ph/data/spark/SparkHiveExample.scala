@@ -62,22 +62,39 @@ object SparkHiveExample {
       .enableHiveSupport()
       .getOrCreate()
 
-    val hiveTableName = "test.test_partition"
-    val hiveDFA = spark.table(hiveTableName)
-    val hiveDFAId = hiveDFA.select("id")
-//    hiveDF.show()
-    val hiveDFB = spark.sql(s"select * from $hiveTableName where id = 2")
-    val hiveDFBId = hiveDFB.select("id")
-//    hiveDF1.show()
+//    val hiveTableName = "test.test_partition"
+//    val hiveDFA = spark.table(hiveTableName)
+//    spark.sql("select )
 
-    val hiveDFAJoinBId = hiveDFAId.join(hiveDFBId, "id")
-    val hiveExceptId: Dataset[Row] = hiveDFAId.except(hiveDFAJoinBId)
-//    hiveExceptId.show()
 
-    val hiveDFAExcept = hiveDFA.join(hiveExceptId, "id")
-    val hiveDFUp = hiveDFAExcept.union(hiveDFB)
-    hiveDFUp.show()
-//    val hiveDFJoin = hiveDFAll.join(hiveExcept, "id")
+    val df: DataFrame = spark.createDataFrame(Seq(
+      ("ming", 20, 15552211521L),
+      (" ", 19, 13287994007L),
+      ("zhi", 21, 15552211523L)
+    )) toDF("name", "age", "phone")
+//    val hiveDFAId = hiveDFA.select("id")
+////    hiveDF.show()
+//    val hiveDFB = spark.sql(s"select * from $hiveTableName where id = 2")
+//    val hiveDFBId = hiveDFB.select("id")
+////    hiveDF1.show()
+//
+//    val hiveDFAJoinBId = hiveDFAId.join(hiveDFBId, "id")
+//    val hiveExceptId: Dataset[Row] = hiveDFAId.except(hiveDFAJoinBId)
+////    hiveExceptId.show()
+//
+//    val hiveDFAExcept = hiveDFA.join(hiveExceptId, "id")
+//    val hiveDFUp = hiveDFAExcept.union(hiveDFB)
+//    hiveDFUp.show()
+
+
+
+    df
+      .repartition(1)
+      .write.format("com.databricks.spark.csv")
+      .option("header", "false")
+      .save("test_data")
+
+    //    val hiveDFJoin = hiveDFAll.join(hiveExcept, "id")
 //    hiveDFJoin.show()
 
 //    val filePath = "/user/zhaopeng/Downloads/"
