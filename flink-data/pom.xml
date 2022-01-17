@@ -14,7 +14,7 @@
     <properties>
         <hadoop.version>3.2.0</hadoop.version>
         <hbase.version>2.2.0</hbase.version>
-        <flink.version>1.10.0</flink.version>
+        <flink.version>1.11.0</flink.version>
         <junit.version>4.12</junit.version>
         <lombok.version>1.18.8</lombok.version>
     </properties>
@@ -70,11 +70,11 @@
             <version>${flink.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-hbase_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.flink</groupId>-->
+        <!--            <artifactId>flink-hbase_${scala.binary.version}</artifactId>-->
+        <!--            <version>${flink.version}</version>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -84,13 +84,45 @@
 
         <dependency>
             <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-hive_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.hive/hive-exec -->
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>3.1.1</version>
+        </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.hadoop</groupId>-->
+<!--            <artifactId>hadoop-common</artifactId>-->
+<!--            <version>3.2.0</version>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-connector-elasticsearch6_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-api-scala-bridge_${scala.binary.version}</artifactId>
+            <artifactId>flink-table-api-java</artifactId>
             <version>${flink.version}</version>
         </dependency>
 
@@ -113,11 +145,35 @@
             <version>1.1.0</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.aliyun</groupId>-->
-<!--            <artifactId>flink-connector-clickhouse</artifactId>-->
-<!--            <version>1.11.0</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-orc_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-api-java</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.aliyun</groupId>-->
+        <!--            <artifactId>flink-connector-clickhouse</artifactId>-->
+        <!--            <version>1.11.0</version>-->
+        <!--        </dependency>-->
 
 
         <dependency>
