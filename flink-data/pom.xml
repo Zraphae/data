@@ -12,7 +12,7 @@
     <artifactId>flink-data</artifactId>
 
     <properties>
-        <hadoop.version>3.2.0</hadoop.version>
+        <hadoop.version>3.2.2</hadoop.version>
         <hbase.version>2.2.0</hbase.version>
         <flink.version>1.10.0</flink.version>
         <junit.version>4.12</junit.version>
