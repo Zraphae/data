@@ -57,7 +57,7 @@ object SparkHiveExample {
       .builder()
       .master("local")
       .appName("Spark Hive Example")
-      .config("hive.exec.dynamic.partition", true)
+      .config("hive.exec.dynamic.partition", value = true)
       .config("hive.exec.dynamic.partition.mode", "nonstrict")
       .enableHiveSupport()
       .getOrCreate()
@@ -68,10 +68,21 @@ object SparkHiveExample {
 
 
     val df: DataFrame = spark.createDataFrame(Seq(
-      ("ming", 20, 15552211521L),
-      (" ", 19, 13287994007L),
-      ("zhi", 21, 15552211523L)
-    )) toDF("name", "age", "phone")
+      ("ming1", 20, 155512L,"123","test"),
+      ("tes1", 19, 13287912L,"123","test"),
+      ("zhi1", 21, 1555223L,"1234","test")
+    )) toDF("name", "age", "phone","create_date","test")
+
+    df.write
+      .format("hive")
+      .mode(SaveMode.Append)
+      .partitionBy("create_date")
+      .saveAsTable("test_parquet")
+//    df.write
+//      .format("hive")
+////      .partitionBy("create_date")
+//      .insertInto("test_parquet")
+
 //    val hiveDFAId = hiveDFA.select("id")
 ////    hiveDF.show()
 //    val hiveDFB = spark.sql(s"select * from $hiveTableName where id = 2")
@@ -88,11 +99,11 @@ object SparkHiveExample {
 
 
 
-    df
-      .repartition(1)
-      .write.format("com.databricks.spark.csv")
-      .option("header", "false")
-      .save("test_data")
+//    df
+//      .repartition(1)
+//      .write.format("com.databricks.spark.csv")
+//      .option("header", "false")
+//      .save("test_data")
 
     //    val hiveDFJoin = hiveDFAll.join(hiveExcept, "id")
 //    hiveDFJoin.show()
@@ -174,7 +185,12 @@ object SparkHiveExample {
     //
     //    partitionInfos.foreach(partitionName => {
     //      val partitionStr = s"tel=$partitionName"
-    //      val partDataPathStr = s"$dataPathStr/$partitionStr"
+    //      val partDataPathStr = s"$dataPathStr/$pINSERT INTO ods_user_event VALUES ('id1','Danny','addr1','1970-01-01 00:00:01','part1'),
+    //('id2','Danny','add2','1970-01-01 00:00:02','part1'),
+    //('id3','Danny','53','1970-01-01 00:00:03','part1'),
+    //('id4','Danny','31','1970-01-01 00:00:04','part1'),
+    //('id5','Danny','18','1970-01-01 00:00:05','part1'),
+    //('id7','Danny','44','1970-01-01 00:00:07','part1'); artitionStr"
     //      val tmpPartDataPathStr = s"$dataTmpPathStr/$partitionStr"
     //
     //      val partDataPath = new Path(partDataPathStr)

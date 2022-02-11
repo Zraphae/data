@@ -13,34 +13,33 @@ object SparkHudi {
 
   def main(args: Array[String]) {
 
-    val basePath = "/user/hive/warehouse/ods_user_event"
+    val basePath = "/user/datalake/warehouse/ods_user_event"
 
-    val spark = SparkSession.builder.appName("hudi").master("local")
+    val spark = SparkSession.builder.appName("hudi").master("local[2]")
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .config("spark.default.parallelism", 4)
+      .config("spark.default.parallelism", 2)
       .config("hive.metastore.uris", "thrift://127.0.0.1:9083")
       .enableHiveSupport().getOrCreate()
 
     import spark.implicits._
     val df: DataFrame = spark.createDataFrame(Seq(
-      ("uid6", "name", "addr6new","update_time2","32232312"),
-      ("uid7", "name", "addr7new","update_time2","42232312")
+      ("uid6", "name", "addr","update_time2","32232312"),
+      ("uid7", "name", "addr","update_time2","42232312")
     )) toDF("uid", "name", "addr","update_time","ts")
 
-//    df.write
-//      .format("org.apache.hudi")
-//      .option("hoodie.embed.timeline.server",false)
-//      .option(KeyGeneratorOptions.RECORDKEY_FIELD_NAME.key, "uid")
-//      .option(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key, "name")
-//      .option(HoodieWriteConfig.TBL_NAME.key, "ods_user_event")
-//      .mode(SaveMode.Append)
-//      .save(basePath)
+    df.write
+      .format("org.apache.hudi")
+      .option("hoodie.embed.timeline.server",false)
+      .option(KeyGeneratorOptions.RECORDKEY_FIELD_NAME.key, "uid")
+      .option(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key, "name")
+      .option(HoodieWriteConfig.TBL_NAME.key, "ods_user_event")
+      .mode(SaveMode.Append)
+      .save(basePath)
 
 
-//
 //    val df = spark.read
 //      .format("org.apache.hudi")
-////      .option("as.of.instant", "20220117083045637")
+////      .option("as.of.instant", "20230117083045637")
 //      .load(basePath)
 //
 //    df.createOrReplaceTempView("test")
@@ -62,16 +61,16 @@ object SparkHudi {
 
 
     //delete
-    val delDf = spark.sql("select * from test where _hoodie_partition_path='namenew7'")
-
-    delDf.write.format("hudi").
-      option("hoodie.embed.timeline.server",value = false).
-      option(OPERATION.key,"delete").
-      option(KeyGeneratorOptions.RECORDKEY_FIELD_NAME.key, "uid").
-      option(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key, "name").
-      option(HoodieWriteConfig.TBL_NAME.key, "ods_user_event").
-      mode(SaveMode.Append).
-      save(basePath)
+//    val delDf = spark.sql("select * from test where _hoodie_partition_path='namenew7'")
+//
+//    delDf.write.format("hudi").
+//      option("hoodie.embed.timeline.server",value = false).
+//      option(OPERATION.key,"delete").
+//      option(KeyGeneratorOptions.RECORDKEY_FIELD_NAME.key, "uid").
+//      option(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key, "name").
+//      option(HoodieWriteConfig.TBL_NAME.key, "ods_user_event").
+//      mode(SaveMode.Append).
+//      save(basePath)
 
     spark.stop()
   }

@@ -68,30 +68,16 @@
             <version>${hbase.version}</version>
         </dependency>
 
-
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>${yaml.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-spark3-bundle_2.12</artifactId>
-            <version>0.10.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hudi</groupId>
-            <artifactId>hudi-spark-common_2.12</artifactId>
-            <version>0.10.0</version>
         </dependency>
 
 
@@ -100,6 +86,24 @@
             <artifactId>hudi-common</artifactId>
             <version>0.10.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-spark-common_2.12</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hudi</groupId>
+            <artifactId>hudi-spark3-bundle_2.12</artifactId>
+            <version>0.10.0</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.iceberg</groupId>
+            <artifactId>iceberg-spark3-runtime</artifactId>
+            <version>0.13.0</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.apache.spark</groupId>
