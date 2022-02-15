@@ -15,7 +15,7 @@
         <hadoop.version>3.2.0</hadoop.version>
         <hbase.version>2.2.0</hbase.version>
         <flink.version>1.11.0</flink.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <lombok.version>1.18.8</lombok.version>
     </properties>
 
