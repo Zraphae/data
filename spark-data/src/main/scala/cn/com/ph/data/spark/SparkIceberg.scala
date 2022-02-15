@@ -28,14 +28,14 @@ object SparkIceberg {
     val df: DataFrame = spark.createDataFrame(Seq(
       (123, "name", "addr","update_time2","32232312"),
       (124, "name", "addr","update_time2","42232312")
-    )) toDF("uid", "name", "addr","update_time","ts")
+    )) toDF("id", "name", "addr","update_time","ts")
 
 //    spark.sql(s"CREATE TABLE hive_prod.default.test_iceberg (uid bigint, name string, addr string, update_time string, ts string) USING iceberg")
 
 //    df.writeTo("hive_prod.default.test_iceberg").overwritePartitions()
 //    df.write
 //      .format("iceberg")
-//      .mode("overwrite")
+//      .mode(SaveMode.Append)
 //      .save("hive_prod.default.ods_user_event_ice")
 
 //    df.writeTo("prod.default.test_iceberg")
@@ -47,9 +47,9 @@ object SparkIceberg {
 //    spark.table("hive_prod.default.ods_user_event_ice").show(10)
 //    spark.sql("select * from hive_prod.default.ods_user_event_ice").show(10)
 //    spark.sql("select * from hive_prod.default.ods_user_event_ice.snapshots").show(10)
-    spark.sql("select * from hive_prod.default.ods_user_event_ice.history").show(10)
+//    spark.sql("select * from hive_prod.default.ods_user_event_ice.history").show(10)
 //    spark.sql(s"select h.made_current_at, s.operation, h.snapshot_id, h.is_current_ancestor, s.summary['spark.app.id'] from hive_prod.default.test_iceberg.history h join hive_prod.default.test_iceberg.snapshots s on h.snapshot_id = s.snapshot_id order by made_current_at").show(10)
-//    spark.sql("select * from hive_prod.default.test_iceberg.manifests").show(10)
+    spark.sql("select * from hive_prod.default.test_iceberg.manifests").show(10)
 
 //    spark.read.format("iceberg").load("hive_prod.default.test_iceberg").show(10)
 
