@@ -14,7 +14,7 @@
     <properties>
         <hbase.version>2.2.0</hbase.version>
         <spark.version>3.1.2</spark.version>
-        <yaml.version>1.26</yaml.version>
+        <yaml.version>1.32</yaml.version>
     </properties>
 
     <dependencies>
